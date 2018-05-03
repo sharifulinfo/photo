@@ -1,0 +1,312 @@
+<==============Word Limti================>
+<p><?php $this->load->helper('text');
+$lim = 100;
+  		$string = word_limiter($article['desc'], $lim);
+  		echo $string;?></p> 
+  	<?php
+  		$stt = explode(" ", $article['desc']);
+  		$num = count($stt);
+  		if($num>$lim){
+  	 		echo anchor(base_url("publicuser/single_post/{$article['id']}"),'See more');
+  	 	}?>
+
+ <==============  Date Show  ================>
+ <p><?= date('Y-m-d h:i A',strtotime($article['created_at']));?></p>
+
+ <==============  Select Query  ================>
+ public function article_list($limit,$ofset){
+	 	$user_id = $this->session->userdata('id'); 
+	 	$q = $this->db 
+	 				->select('*')
+	 				->from('tbl_atricles')
+	 				->where('user_id',$user_id)
+	 				->limit($limit,$ofset)
+	 				->order_by('created_at','DESC')
+	 				->get();
+	 	$result = $q->result_array();
+	 	return $result;
+
+	 }
+
+ <==============  Insert Query  ================> 
+public function add_article($data){
+	 	return $this->db->insert('tbl_atricles',$data);
+	 }
+
+ <==============  Update Query  ================> 
+ public function edit_article_model($article_id){
+	 	return $this->db->update('tbl_atricles',['title'=> $article['title'], 'desc' => $article['desc']],['id' => $article_id ]);
+	 }
+
+ <==============  Delete Query  ================> 
+ public function dalete_article_model($article_id){
+	 	return $this->db->delete('tbl_atricles', ['id' => $article_id]);
+	 }
+
+ <==============  Search with paginaton Query  ================> 
+ //in model
+public function search_model($query,$limit,$offset){
+	 	$q = $this->db 
+	 				->select('*')
+	 				->from('tbl_atricles') 
+	 				->like('desc',$query)
+	 				->limit($limit,$offset)
+	 				->get();
+	 	$result = $q->result_array();
+	 	return $result;
+	 }
+
+//in controller
+public function search(){
+		$this->load->library('form_validation');
+		$this->form_validation->set_error_delimiters('<div class="text-danger">', '</div>');
+		$data = $this->input->post('search'); 
+		if( $this->form_validation->run('search') == TRUE ){
+			//$this->load->model('articlesmodel');
+			//$value['values'] = $this->articlesmodel->search_model($data);
+				//$this->load->view('Public/search' ,$value);
+			redirect("Publicuser/search_with_pagination/$data");
+		}else{ 
+			//redirect('publicuser/index'); 
+			$this->index();
+		} 
+	}
+
+	public function search_with_pagination( $uew ){
+		$this->load->helper('form');
+	 	$this->load->model('articlesmodel');
+		 $this->load->library('pagination');
+		 $configs = [
+		 	'base_url'			=> base_url("Publicuser/search_with_pagination/$uew"),
+		 	'per_page'			=> 3,
+		 	'uri_segment'		=> 4,
+		 	'total_rows'		=> $this->articlesmodel->num_row_search($uew),
+		 	'attributes'		=> array('class' => 'page-link'),
+		 	'full_tag_open'		=> '<ul class="pagination">',
+		 	'full_tag_close'	=> '</ul>',
+		 	'next_tag_open'		=> '<li class="page-item">',
+		 	'next_tag_close'	=> '</li>',
+		 	'prev_tag_open'		=> '<li class="page-item">',
+		 	'perv_tag_close'	=> '</li>',
+		 	'num_tag_open'		=> '<li class="page-item">',
+		 	'num_tag_close'		=> '</li>',
+		 	'cur_tag_open'		=> '<li class="page-item active"><a class="page-link">',
+		 	'cur_tag_close'		=> '</a></li>',
+		 ];
+		 $this->pagination->initialize($configs); 
+
+	$value['values'] = $this->articlesmodel->search_model($uew,$configs['per_page'],$this->uri->segment(4));
+		 $this->load->view('Public/search' ,$value);
+	}
+
+
+ <==============  Single Post Query  ================>  
+public function single_model($article_id){
+	 	$q = $this->db 
+	 				->select('*')
+	 				->from('tbl_atricles')
+	 				->where('id',$article_id)
+	 				->get();
+	 	$result = $q->row();
+	 	return $result;
+	 }
+ <==============  Pagination Code  ================>   
+$this->load->library('pagination');
+		 $configs = [
+		 	'base_url'			=> base_url('Publicuser/index'),
+		 	'per_page'			=> 3,
+		 	'total_rows'		=> $this->articlesmodel->num_rowsss(),
+		 	'attributes'		=> array('class' => 'page-link'),
+		 	'full_tag_open'		=> '<ul class="pagination">',
+		 	'full_tag_close'	=> '</ul>',
+		 	'next_tag_open'		=> '<li class="page-item">',
+		 	'next_tag_close'	=> '</li>',
+		 	'prev_tag_open'		=> '<li class="page-item">',
+		 	'perv_tag_close'	=> '</li>',
+		 	'num_tag_open'		=> '<li class="page-item">',
+		 	'num_tag_close'		=> '</li>',
+		 	'cur_tag_open'		=> '<li class="page-item active"><a class="page-link">',
+		 	'cur_tag_close'		=> '</a></li>',
+		 ];
+		 $this->pagination->initialize($configs);
+		$data['allarticles'] = $this->articlesmodel->all_article_list($configs['per_page'],$page); 
+		//echo page <?= $this->pagination->create_links();?>
+
+ <==============  Form Validation ================> 
+
+ $this->load->library('form_validation');
+		//$ss = $this->form_validation->run('article');
+		$this->form_validation->set_error_delimiters('<div class="text-danger">', '</div>');
+		//$this->form_validation->set_rules('title','Title','trim|required|valid_email');
+		if( $this->form_validation->run('login')){
+
+		}else{
+
+		}
+
+$config = [
+               'login'     =>    [
+                                          [
+                                             'field'   => 'uname', 
+                                             'label'   => 'User Name', 
+                                             'rules'   => 'trim|required'                                                         
+                                          ],
+
+                                          [
+                                             'field'   => 'password', 
+                                             'label'   => 'Password', 
+                                             'rules'   => 'trim|required'
+                                          ]
+
+               ],
+        ]
+
+ <==============  Form Add ================> 
+<?php echo form_error('search');?>
+	    	<?php echo form_open('publicuser/search',['class' => 'form-inline my-2 my-lg-0','role' => 'search']);?>
+	       
+	      <?php echo form_input(['name' => 'search', 'class' => 'form-control mr-sm-2', 'pleaceholder' => 'Search Here', 'require' => '1','type' => 'text']);?>
+	       <?php echo form_error('search');?>
+	      <?php 
+	     	echo form_reset(array('name'=>'reset', 'value'=>'Clear','class'=>'btn btn-default')),
+	     		form_submit(array('name'=>'submit', 'value'=>'Submit Post!','class'=>'btn btn-primary'));
+	     ?>
+	    <?= form_close();?>
+
+ <==============  Flash Data Add ================> 
+public function _flashandredirect($successful,$successMassage,$failerMassage){
+	 	if( $successful ){
+				$this->session->set_flashdata('feedback_article', $successMassage);
+				$this->session->set_flashdata('feedback_article_class','alert alert-dismissible alert-success');
+			}else{
+				$this->session->set_flashdata('feedback_article', $failerMassage);
+				$this->session->set_flashdata('feedback_article_class','alert alert-dismissible alert-secondary');
+			}
+		 	return redirect('admin/dashboard');
+	 }
+
+	 <?php if( $esrr = $this->session->flashdata('feedback_article') ){
+				$clas = $this->session->flashdata('feedback_article_class') ;
+			?>
+	    <div class="<?php echo $clas;?>">
+		  <button type="button" class="close" data-dismiss="alert">&times;</button>
+		  <strong><?php echo $esrr;?></strong>
+		</div>
+	    <?php } ?>
+
+
+
+/****************** Login Model *********************/
+//in Model
+public function valid_login($uname,$pass){
+
+		$pass = md5($pass);
+		//$q = $this->db->query("SELECT * FROM tbl_users where username = '$uname' && password = '$pass'");
+		$q = $this->db->where(['username' => $uname, 'password' => $pass])
+			->get('tbl_users');
+
+		 
+		 
+		if( $q->num_rows() ){
+			return $q->row()->id;
+			 
+		}else{
+			return false;
+		}
+
+	} 
+//in controller
+class Login extends MY_Controller{
+	
+	 public function index(){
+	 	if( $this->session->userdata('id')){
+	 		return redirect('admin/dashboard');
+	 	}
+	 	$this->load->helper('form');
+	 	$this->load->view('Public/admin_login');
+	 }
+
+	 public function login_function(){
+	 	$this->load->library('form_validation');
+
+	 	
+
+	 	// $this->form_validation->set_rules('email','Email','trim|required|valid_email');
+	 	// $this->form_validation->set_rules('password','Password','trim|required');
+	 	//$this->form_validation->set_message('required', 'Field must no be empty!');
+	 	$this->form_validation->set_error_delimiters('<div class="text-danger">', '</div>');
+
+	 	if($this->form_validation->run('login') == TRUE){
+	 		$uname = $this->input->post('uname');
+	 		$pass = $this->input->post('password'); 
+
+	 		$this->load->model('Loginmodel');
+
+	 		$user_id = $this->Loginmodel->valid_login($uname,$pass);
+	 		if( $user_id ){
+	 			$this->load->library('session');
+	 			$this->session->set_userdata('id', $user_id);
+	 			return redirect('admin/dashboard');
+	 			//$this->load->view('Admin/dashboard');
+			}else{
+				$this->session->set_flashdata('login_faild','Invalid Username/Password..');
+				return redirect('login');
+			}
+	 		 
+	 	}else{
+	 		$this->load->view('Public/admin_login');
+	 		//echo validation_errors();
+	 	}
+	 	//echo "Login Inforamon";
+	 }
+	 public function logout(){
+	 	$this->load->library('session');
+	 	$this->session->unset_userdata('id');
+	 	redirect('login');
+	 }
+} 
+
+//echo flash data
+<?php if( $err = $this->session->flashdata('login_faild') ){?>
+	    <div class="row">
+	    	<div class="col-lg-6">
+	    		<div class="alert alert-dismissible alert-secondary">
+				  <button type="button" class="close" data-dismiss="alert">&times;</button>
+				  <strong><?php echo $err;?></strong>
+				</div>
+	    	</div>
+	    </div>
+	    <?php } ?>
+//admin controller __construct
+if(! $this->session->userdata('id')){
+			redirect('login');
+		}
+
+/************************** Image Upload ***********************/
+public function store_articles(){
+		$config = [
+			'upload_path'		=> './uploads',
+			'allowed_types'		=> 'jpg|jpeg|gif|png'
+		];
+		$this->load->library('upload',$config);
+		$this->load->library('form_validation');
+		//$ss = $this->form_validation->run('article');
+		$this->form_validation->set_error_delimiters('<div class="text-danger">', '</div>');
+		//$this->form_validation->set_rules('title','Title','trim|required|valid_email'); 
+
+		if( $this->form_validation->run('article') && $this->upload->do_upload() ){
+			$data = $this->input->post();
+			$image = $this->upload->data();
+			$data['image_path'] = base_url('uploads/'.$image['file_name']);
+			unset($data['submit']);  
+			$this->_flashandredirect(
+	 			$this->articlesmodel->add_article($data),
+	 			'Article added successfully!...',
+	 			'Article not inserted!!...'
+	 		); 
+		}else{
+			$error = array('error' => $this->upload->display_errors());
+			$this->load->view('Admin/add_article',$error);
+			//echo validation_errors();
+		}
+	} 
